@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Status</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#4799eb",
+            bg: "#f6f7f8"
+          },
+          fontFamily: {
+            display: ["Manrope", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="font-display bg-bg min-h-screen">
+
+<header class="px-4 pt-4 pb-3">
+  <a href="job_seeker_home.html" class="flex items-center gap-1 text-primary font-medium">
+    <span class="material-symbols-outlined">arrow_back_ios</span>
+    Back to Home
+  </a>
+  <h1 class="text-2xl font-bold mt-2">Application Status</h1>
+</header>
+
+<main id="applicationsList" class="px-4 pb-10 space-y-4"></main>
+
+<!-- ================= SUPABASE ================= -->
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+
+const supabase = createClient(
+  "https://ispbevvwwggbktfczmui.supabase.co",
+  "sb_publishable_5pnSaiKllm-q7UNMe5r7pw_n4Qu-AJ7"
+)
+
+/* ===== AUTH ===== */
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) location.href = "signin.html"
+
+/* ===== GET job_seeker_id ===== */
+const { data: jobSeeker } = await supabase
+  .from("job_seekers")
+  .select("job_seeker_id")
+  .eq("user_id", user.id)
+  .single()
+
+if (!jobSeeker) {
+  document.getElementById("applicationsList").innerHTML =
+    `<p class="text-red-500">Job seeker profile not found</p>`
+  throw new Error("No job_seeker_id")
+}
+
+const workerId = jobSeeker.job_seeker_id
+const listEl = document.getElementById("applicationsList")
+
+/* ===== FETCH APPLICATIONS ===== */
+const { data: applications, error } = await supabase
+  .from("job_applications")
+  .select(`
+    job_application_id,
+    application_status,
+    applied_at,
+    jobposts (
+      jobpost_id,
+      job_title,
+      workplace_name
+    )
+  `)
+  .eq("worker_id", workerId)
+  .order("applied_at", { ascending: false })
+
+if (error) {
+  console.error(error)
+  listEl.innerHTML = `<p class="text-red-500">Failed to load applications</p>`
+  throw error
+}
+
+if (!applications.length) {
+  listEl.innerHTML = `
+    <p class="text-center text-gray-500 mt-20">
+      You haven’t applied to any jobs yet
+    </p>`
+}
+
+/* ===== RENDER ===== */
+applications.forEach(app => {
+  listEl.insertAdjacentHTML("beforeend", card(app))
+})
+
+/* ===== HELPERS ===== */
+function statusBadge(status) {
+  const map = {
+    Pending:   "bg-yellow-100 text-yellow-800",
+    Accepted:  "bg-green-100 text-green-800",
+    Rejected:  "bg-red-100 text-red-800",
+    Reviewed:  "bg-blue-100 text-blue-800"
+  }
+  return map[status] || "bg-gray-200 text-gray-700"
+}
+
+function card(app) {
+  return `
+  <div class="bg-white rounded-xl shadow p-4 space-y-3">
+    <div class="flex justify-between items-start">
+      <div>
+        <h2 class="text-lg font-bold">
+          ${app.jobposts.job_title ?? "Untitled Job"}
+        </h2>
+        <p class="text-gray-600">
+          ${app.jobposts.workplace_name ?? "-"}
+        </p>
+      </div>
+
+      <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase
+                   ${statusBadge(app.application_status)}">
+        ${app.application_status}
+      </span>
+    </div>
+
+    <p class="text-sm text-gray-500">
+      Applied: ${new Date(app.applied_at).toLocaleDateString()}
+    </p>
+
+    <div class="flex justify-end">
+      <button
+        onclick="location.href='job_application_details.html?id=${app.job_application_id}'"
+        class="h-9 px-4 rounded-lg bg-primary text-white text-sm font-medium">
+        View Details
+      </button>
+    </div>
+  </div>
+  `
+}
+</script>
+
+</body>
+</html>

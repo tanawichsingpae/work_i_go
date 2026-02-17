@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Application Details</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: "#4799eb",
+            bg: "#f6f7f8",
+            card: "#ffffff",
+            textMain: "#0f172a",
+            textSub: "#64748b",
+            success: "#22c55e",
+            warning: "#f59e0b",
+            danger: "#ef4444"
+      },
+      fontFamily: {
+        display: ["Manrope", "sans-serif"]
+      }
+    }
+  }
+}
+</script>
+</head>
+
+<body class="bg-bg font-display text-textMain">
+
+<div class="min-h-screen flex flex-col">
+
+<!-- HEADER -->
+<header class="sticky top-0 z-10 bg-bg/80 backdrop-blur border-b">
+  <div class="flex items-center gap-3 px-4 py-3">
+    <button onclick="history.back()" class="p-2 rounded-full hover:bg-slate-200">
+      <span class="material-symbols-outlined">arrow_back</span>
+    </button>
+    <h1 class="flex-1 text-center font-bold text-lg">Application Details</h1>
+    <span class="material-symbols-outlined opacity-60">share</span>
+  </div>
+</header>
+
+<main class="flex flex-col gap-6 p-4">
+
+<!-- JOB CARD -->
+<section class="bg-card rounded-2xl p-5 shadow-sm">
+  <div class="flex gap-4">
+    <div class="h-16 w-16 rounded-xl bg-gray-200 overflow-hidden">
+  <img
+    id="employer-image"
+    class="h-full w-full object-cover hidden"
+  />
+  <span
+    id="employer-placeholder"
+    class="material-symbols-outlined text-3xl text-gray-400 flex h-full w-full items-center justify-center"
+  >
+    store
+  </span>
+</div>
+    <div class="flex-1">
+      <h2 id="jobTitle" class="text-xl font-bold leading-tight">-</h2>
+      <p id="companyName" class="text-textSub font-medium">-</p>
+      <p id="jobAddress" class="text-sm text-textSub">-</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATUS INFO -->
+<section class="bg-card rounded-2xl p-5 shadow-sm space-y-4">
+  <div class="flex justify-between">
+    <span class="text-sm text-textSub">Applied on</span>
+    <span id="appliedDate" class="font-semibold">-</span>
+  </div>
+
+  <div class="flex justify-between items-center">
+    <span class="text-sm text-textSub">Current status</span>
+    <span id="statusBadge"
+      class="px-4 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+      -
+    </span>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<section>
+<h3 class="font-bold text-lg mb-4">Application Progress</h3>
+
+<div class="bg-card rounded-2xl p-5 shadow-sm space-y-5">
+
+<div class="flex items-center gap-4">
+  <div id="stepApplied" class="size-9 rounded-full bg-primary text-white flex items-center justify-center">
+    <span class="material-symbols-outlined !text-xl" style="font-variation-settings:'FILL' 1;">check</span>
+  </div>
+  <div>
+    <p class="font-semibold">Applied</p>
+    <p class="text-sm text-textSub">Application submitted</p>
+  </div>
+</div>
+
+<div class="flex items-center gap-4">
+  <div id="stepReviewed"
+    class="size-9 rounded-full border-2 border-slate-300 text-slate-400 flex items-center justify-center">
+    <span class="material-symbols-outlined !text-xl">visibility</span>
+  </div>
+  <div>
+    <p class="font-semibold">Reviewed</p>
+    <p id="reviewText" class="text-sm text-textSub">Waiting for employer</p>
+  </div>
+</div>
+
+<div class="flex items-center gap-4">
+  <div id="stepFinal"
+    class="size-9 rounded-full border-2 border-slate-300 text-slate-400 flex items-center justify-center">
+    <span class="material-symbols-outlined !text-xl">thumb_up</span>
+  </div>
+  <div>
+    <p class="font-semibold">Final decision</p>
+    <p class="text-sm text-textSub">Accepted or rejected</p>
+  </div>
+</div>
+
+</div>
+</section>
+
+<!-- MESSAGE -->
+<section>
+<h3 class="font-bold text-lg mb-3">Message from employer</h3>
+<div class="bg-card rounded-2xl p-5 shadow-sm">
+  <p class="text-sm italic text-textSub">
+    No messages from the employer yet.
+  </p>
+</div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="sticky bottom-0 bg-bg/80 backdrop-blur border-t p-4">
+  <button id="cancelBtn"
+    class="hidden w-full rounded-xl bg-danger py-4 text-white font-bold">
+    Cancel Application
+  </button>
+</footer>
+
+</div>
+
+<!-- ================= SUPABASE ================= -->
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
+
+const supabase = createClient(
+  "https://ispbevvwwggbktfczmui.supabase.co",
+  "sb_publishable_5pnSaiKllm-q7UNMe5r7pw_n4Qu-AJ7"
+)
+
+const id = new URLSearchParams(location.search).get("id")
+const { data, error } = await supabase
+  .from("job_applications")
+  .select(`
+    application_status,
+    applied_at,
+    jobposts (
+      job_title,
+      workplace_name,
+      address,
+      employers (
+        store_image_url
+      )
+    )
+  `)
+  .eq("job_application_id", id)
+  .single()
+const img = document.getElementById("employer-image")
+const placeholder = document.getElementById("employer-placeholder")
+
+const imageUrl = data.jobposts?.employers?.store_image_url
+
+if (imageUrl) {
+  img.src = imageUrl
+  img.classList.remove("hidden")
+  placeholder.classList.add("hidden")
+}
+if (error || !data) {
+  alert("Application not found")
+  history.back()
+  throw error
+}
+
+
+jobTitle.textContent = data.jobposts.job_title
+companyName.textContent = data.jobposts.workplace_name
+jobAddress.textContent = data.jobposts.address
+appliedDate.textContent = new Date(data.applied_at).toLocaleDateString()
+const badge = document.getElementById("statusBadge")
+const cancelBtn = document.getElementById("cancelBtn")
+
+const status = data.application_status
+badge.textContent = status
+function statusBadge(status) {
+  const map = {
+    Pending:   "bg-yellow-100 text-yellow-800",
+    Accepted:  "bg-green-100 text-green-800",
+    Rejected:  "bg-red-100 text-red-800",
+    Reviewed:  "bg-blue-100 text-blue-800"
+  }
+  return map[status] || "bg-gray-200 text-gray-700"
+}
+switch (status) {
+  case "Pending":
+    badge.className =
+      "px-4 py-1 rounded-full text-sm font-semibold bg-warning/20 text-warning"
+    cancelBtn.classList.remove("hidden")
+    break
+
+  case "Reviewed":
+    badge.className =
+      "px-4 py-1 rounded-full text-sm font-semibold bg-primary/20 text-primary"
+
+    stepReviewed.classList.replace("border-slate-300", "bg-primary")
+    stepReviewed.classList.add("text-white")
+    reviewText.textContent = "Reviewed by employer"
+    break
+
+  case "Accepted":
+    badge.className =
+      "px-4 py-1 rounded-full text-sm font-semibold bg-success/20 text-success"
+
+    stepReviewed.classList.replace("border-slate-300", "bg-primary")
+    stepReviewed.classList.add("text-white")
+
+    stepFinal.classList.replace("border-slate-300", "bg-success")
+    stepFinal.classList.add("text-white")
+    break
+
+  case "Rejected":
+    badge.className =
+      "px-4 py-1 rounded-full text-sm font-semibold bg-danger/20 text-danger"
+
+    stepReviewed.classList.replace("border-slate-300", "bg-primary")
+    stepReviewed.classList.add("text-white")
+
+    stepFinal.classList.replace("border-slate-300", "bg-danger")
+    stepFinal.classList.add("text-white")
+    break
+}
+if (status === "Pending") {
+  cancelBtn.classList.remove("hidden")
+
+  cancelBtn.onclick = async () => {
+    const ok = confirm(
+      "Are you sure you want to cancel this application?\nThis action cannot be undone."
+    )
+    if (!ok) return
+
+    cancelBtn.disabled = true
+    cancelBtn.textContent = "Cancelling..."
+
+    const { error } = await supabase
+      .from("job_applications")
+      .delete()
+      .eq("job_application_id", id)
+
+    if (error) {
+      alert("Failed to cancel application")
+      console.error(error)
+      cancelBtn.disabled = false
+      cancelBtn.textContent = "Cancel Application"
+      return
+    }
+
+    window.location.href = "job_application_status_list.html"
+  }
+}
+
+
+</script>
+
+</body>
+</html>

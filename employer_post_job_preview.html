@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Employer - Post Job Preview (Themed)</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#ff6a00",
+        "background-light": "#f8f7f5",
+        "background-dark": "#23170f",
+        "dark-blue": "#1F3A5F",
+      },
+      fontFamily: {
+        "display": ["Manrope", "sans-serif"]
+      },
+      borderRadius: {
+        "DEFAULT": "0.5rem",
+        "lg": "0.75rem",
+        "xl": "1rem",
+        "full": "9999px"
+      },
+    },
+  },
+}
+</script>
+
+<style>
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+body {
+  min-height: max(884px, 100dvh);
+}
+</style>
+</head>
+
+<body class="font-display">
+<div class="relative flex min-h-screen w-full flex-col bg-white overflow-x-hidden">
+
+<!-- Top App Bar -->
+<div class="flex items-center bg-dark-blue p-4 justify-between sticky top-0 z-10 shadow-md">
+  <div class="w-10"></div>
+  <h2 class="text-white text-xl font-bold flex-1 text-center">Job Preview</h2>
+  <div class="w-10"></div>
+</div>
+
+<main class="flex-grow pb-32" id="preview-content">
+
+<!-- Job Details -->
+<div class="mx-4 mt-6 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-4">Job Details</h3>
+  <div class="grid gap-y-4 text-sm">
+    <div>
+      <p class="text-gray-500 font-medium">Job Title</p>
+      <p id="job_title" class="text-gray-800 font-semibold"></p>
+    </div>
+    <div>
+      <p class="text-gray-500 font-medium">Location</p>
+      <p id="location" class="text-gray-800 font-semibold"></p>
+    </div>
+    <div>
+      <p class="text-gray-500 font-medium">Job Type</p>
+      <p id="job_type" class="text-gray-800 font-semibold"></p>
+    </div>
+    <div>
+      <p class="text-gray-500 font-medium">Workers Needed</p>
+      <p id="workers_needed" class="text-gray-800 font-semibold"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Job Description -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Job Description</h3>
+  <p id="job_description" class="text-gray-700 text-sm leading-relaxed"></p>
+</div>
+
+<!-- Qualifications -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Qualifications</h3>
+  <p id="qualifications" class="text-gray-700 text-sm"></p>
+</div>
+
+<!-- Requirements -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Requirements</h3>
+  <p class="text-sm text-gray-800">
+    Gender: <span id="gender_requirement"></span><br>
+    Age: <span id="age_from"></span> - <span id="age_to"></span>
+  </p>
+</div>
+
+<!-- Payment -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Payment</h3>
+  <p class="text-sm text-gray-800">
+    Wage: <span id="wage_amount"></span> / hour<br>
+    Method: <span id="payment_method"></span>
+  </p>
+</div>
+
+<!-- Schedule -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Work Schedule</h3>
+  <p class="text-sm text-gray-800">
+    Date: <span id="date_range"></span><br>
+    Time: <span id="time_range"></span>
+  </p>
+</div>
+
+<!-- Contact -->
+<div class="mx-4 mt-4 p-5 bg-[#F5F7FA] rounded-xl shadow-sm">
+  <h3 class="text-dark-blue text-lg font-bold mb-3">Contact</h3>
+  <p class="text-sm text-gray-800">
+    Name: <span id="contact_name"></span><br>
+    Phone: <span id="phone_number"></span>
+  </p>
+</div>
+
+</main>
+
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 right-0 bg-white p-4 border-t shadow">
+  <div class="flex gap-3">
+    <button onclick="goBack()"
+  class="flex-1 rounded-full bg-dark-blue py-3.5 text-white font-bold">
+  Edit
+</button>
+
+    <button onclick="confirmPost()"
+      class="flex-1 rounded-full bg-primary py-3.5 text-white font-bold">
+      Confirm Post
+    </button>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const supabase = createClient(
+  "https://ispbevvwwggbktfczmui.supabase.co",
+  "sb_publishable_5pnSaiKllm-q7UNMe5r7pw_n4Qu-AJ7"
+);
+
+  
+const draft = JSON.parse(localStorage.getItem("jobPostDraft"));
+const params = new URLSearchParams(location.search);
+const mode = params.get("mode");      // edit | null
+const jobpostId = params.get("id");   // jobpost_id
+
+if (!draft) {
+  alert("ไม่พบข้อมูล Preview");
+  location.href = "employer_post_a_job_form.html";
+}
+
+const set = (id, val) =>
+  document.getElementById(id).textContent = val || "-";
+
+set("job_title", draft.job_title);
+set(
+  "location",
+  `${draft.workplace_name || "-"} | 
+   ${draft.address || "-"} 
+   ตำบล${draft.sub_district_name || ""} 
+   อำเภอ${draft.district_name || ""} 
+   จังหวัด${draft.province_name || ""} 
+   ${draft.zip_code || ""}`
+);
+set("job_type", draft.job_type_name);
+set("workers_needed", draft.workers_needed);
+set("job_description", draft.job_description);
+set("qualifications", draft.qualifications);
+set("gender_requirement", draft.gender_requirement || "Any");
+const age = draft.age_requirement;
+set("age_from", age?.from || "-");
+set("age_to", age?.to || "-");
+set("wage_amount", draft.wage_amount);
+set("payment_method", draft.payment_method);
+set("date_range", `${draft.start_date || "-"} → ${draft.end_date || "-"}`);
+set("time_range", `${draft.start_time || "-"} → ${draft.end_time || "-"}`);
+set("contact_name", draft.contact_name);
+set("phone_number", draft.phone_number);
+
+window.confirmPost = async function () {
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser(); 
+
+  if (userError || !user) {
+    alert("กรุณา login ใหม่");
+    location.href = "signin.html";
+    return;
+  }
+
+  const employer_id = "EM_" + user.id;
+
+  const payload = {
+    employer_id,
+    job_title: draft.job_title,
+    job_type_id: draft.job_type_id,
+    job_description: draft.job_description,
+    qualifications: draft.qualifications,
+
+    workers_needed: draft.workers_needed,
+    gender_requirement: draft.gender_requirement,
+    age_requirement: draft.age_requirement
+  ? {
+      from: draft.age_requirement.from
+        ? Number(draft.age_requirement.from)
+        : null,
+      to: draft.age_requirement.to
+        ? Number(draft.age_requirement.to)
+        : null
+    }
+  : null,
+
+    wage_amount: draft.wage_amount,
+    payment_method: draft.payment_method,
+
+    workplace_name: draft.workplace_name,
+    address: draft.address,
+    province_id: draft.province_id,
+    district_id: draft.district_id,
+    sub_district_id: draft.sub_district_id,
+    zip_code: draft.zip_code,
+
+    latitude: draft.latitude,
+    longitude: draft.longitude,
+
+    start_date: draft.start_date,
+    end_date: draft.end_date,
+    start_time: draft.start_time,
+    end_time: draft.end_time,
+
+    contact_name: draft.contact_name,
+    phone_number: draft.phone_number,
+
+    approval_status: "Pending",
+
+  };
+
+  let result;
+
+  if (mode === "edit" && jobpostId) {
+
+    // 1. ดึงสถานะเก่า
+    const { data: currentPost } = await supabase
+      .from("jobposts")
+      .select("approval_status")
+      .eq("jobpost_id", jobpostId)
+      .single();
+
+    // 2. update งาน
+    const { error: updateError } = await supabase
+      .from("jobposts")
+      .update(payload)
+      .eq("jobpost_id", jobpostId);
+
+    if (updateError) {
+      alert(updateError.message);
+      return;
+    }
+
+    // 3. เพิ่ม appeal เฉพาะกรณี Rejected
+    if (currentPost?.approval_status === "Rejected") {
+      const { error: appealError } = await supabase.rpc("submit_appeal", {
+        p_jobpost_id: jobpostId
+      });
+
+      if (appealError) {
+        alert(appealError.message);
+        return;
+      }
+    }
+
+  } else {
+    /* ===== NEW POST ===== */
+    const { error } = await supabase
+      .from("jobposts")
+      .insert(payload);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+  }
+
+  localStorage.removeItem("jobPostDraft");
+  location.href = "employer_job_post_success_(themed).html";
+};
+
+window.goEdit = function () {
+  const params = new URLSearchParams(location.search);
+  const jobpostId = params.get("id");
+
+  if (jobpostId) {
+    // edit จาก post ที่มีอยู่แล้ว
+    location.href = `employer_post_a_job_form.html?id=${jobpostId}&mode=edit`;
+  } else {
+    // edit จาก draft
+    location.href = `employer_post_a_job_form.html?mode=edit`;
+  }
+};
+
+window.goBack = function () {
+  const params = new URLSearchParams(location.search);
+  const jobpostId = params.get("id");
+  const mode = params.get("mode");
+
+  if (jobpostId) {
+    location.href = `employer_post_a_job_form.html?id=${jobpostId}&mode=${mode || "edit"}`;
+  } else {
+    location.href = "employer_post_a_job_form.html";
+  }
+};
+</script>
+
+</body>
+</html>
