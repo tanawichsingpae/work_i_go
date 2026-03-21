@@ -269,83 +269,199 @@ Reject
 </div>
 </nav>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+<script>
 
-const supabase = createClient(
-  "https://ispbevvwwggbktfczmui.supabase.co",
-  "sb_publishable_5pnSaiKllm-q7UNMe5r7pw_n4Qu-AJ7"
+const USERS = [
+{
+name:"Sarah Johnson",
+email:"sarah@gmail.com",
+avatar:"https://i.pravatar.cc/150?img=12",
+idcard:"https://image.mfa.go.th/mfa/0/91fPdh6NtO/Consular-Services/%E0%B8%9A%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%95%E0%B8%B1%E0%B8%A7%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%8A%E0%B8%99%E0%B9%84%E0%B8%97%E0%B8%A2/Thai_ID_Card_Mockup.png",
+status:"Pending",
+citizen:"1234567890123",
+dob:"1998-05-12",
+phone:"089-123-4567",
+address:"Bangkok, Thailand",
+face:"https://clipart-library.com/2024/cartoon-boy-images/cartoon-boy-images-15.webp",
+role:"jobseeker",
+},
+{
+name:"Michael Cafe",
+email:"michael@mail.com",
+avatar:"https://i.pravatar.cc/150?img=32",
+idcard:"https://image.mfa.go.th/mfa/0/91fPdh6NtO/Consular-Services/%E0%B8%9A%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%95%E0%B8%B1%E0%B8%A7%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%8A%E0%B8%99%E0%B9%84%E0%B8%97%E0%B8%A2/Thai_ID_Card_Mockup.png",
+status:"Verified",
+citizen:"9876543210987",
+dob:"1995-02-20",
+phone:"081-555-8899",
+address:"Chiang Mai, Thailand",
+face:"https://clipart-library.com/2024/face-cartoon/face-cartoon-9.webp",
+role:"employer",
+},
+{
+name:"Anna Smith",
+email:"anna@mail.com",
+avatar:"https://i.pravatar.cc/150?img=5",
+idcard:"https://image.mfa.go.th/mfa/0/91fPdh6NtO/Consular-Services/%E0%B8%9A%E0%B8%B1%E0%B8%95%E0%B8%A3%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%88%E0%B8%B3%E0%B8%95%E0%B8%B1%E0%B8%A7%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%8A%E0%B8%99%E0%B9%84%E0%B8%97%E0%B8%A2/Thai_ID_Card_Mockup.png",
+status:"Rejected",
+citizen:"5556667778889",
+dob:"2000-11-03",
+phone:"092-444-2211",
+address:"Phuket, Thailand",
+face:"https://img.favpng.com/11/15/23/3d-girl-avatar-cute-animated-girl-with-braided-hair-mb7TQiRH.jpg",
+role:"jobseeker",
+}
+
+];
+
+
+const list = document.getElementById("user-list");
+const detail = document.getElementById("user-detail");
+
+list.innerHTML="";
+
+let currentFilter="all";
+
+function renderUsers(){
+
+list.innerHTML="";
+
+USERS
+.filter(u=> currentFilter==="all" ? true : u.role===currentFilter)
+.forEach(u=>{
+
+const div=document.createElement("div");
+
+div.className="bg-white rounded-xl border p-4 flex gap-3 cursor-pointer";
+
+const roleBadge =
+u.role==="jobseeker"
+? `<span class="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Jobseeker</span>`
+: `<span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">Employer</span>`;
+
+const statusColor =
+u.status==="Verified" ? "bg-green-100 text-green-600" :
+u.status==="Rejected" ? "bg-red-100 text-red-600" :
+"bg-orange-100 text-orange-600";
+
+div.innerHTML=`
+<img src="${u.avatar}" class="w-12 h-12 rounded-full">
+
+<div class="flex-1">
+<p class="font-bold">${u.name}</p>
+<p class="text-xs text-slate-500">${u.email}</p>
+
+<div class="flex gap-2 mt-1">
+<span class="text-xs ${statusColor} px-2 py-0.5 rounded-full">${u.status}</span>
+${roleBadge}
+</div>
+
+</div>
+`;
+
+div.onclick=()=>openUser(u);
+
+list.appendChild(div);
+
+});
+
+}
+
+renderUsers();
+;
+function setFilter(type){
+
+currentFilter=type;
+
+document.querySelectorAll("[id^='f-']").forEach(b=>{
+b.className="flex-1 border rounded-lg py-2 text-sm";
+});
+
+document.getElementById("f-"+type)
+.className="flex-1 bg-primary text-white rounded-lg py-2 text-sm";
+
+renderUsers();
+
+}
+
+function openUser(u){
+
+list.classList.add("hidden");
+detail.classList.remove("hidden");
+
+document.getElementById("detail-avatar").src=u.avatar;
+document.getElementById("detail-name").innerText=u.name;
+document.getElementById("detail-email").innerText=u.email;
+document.getElementById("detail-idcard").src=u.idcard;
+document.getElementById("detail-status").innerText=u.status;
+document.getElementById("detail-citizen").innerText=u.citizen;
+document.getElementById("detail-dob").innerText=u.dob;
+document.getElementById("detail-phone").innerText=u.phone;
+document.getElementById("detail-address").innerText=u.address;
+document.getElementById("detail-face").src=u.face;
+
+
+}
+
+function backToList(){
+detail.classList.add("hidden");
+list.classList.remove("hidden");
+}
+
+function approveUser(){
+
+const badge = document.getElementById("detail-status");
+
+badge.innerText = "Verified";
+
+badge.className =
+"inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-600";
+
+}
+
+function rejectUser(){
+
+const badge = document.getElementById("detail-status");
+
+badge.innerText = "Rejected";
+
+badge.className =
+"inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-600";
+
+}
+
+
+</script>
+
+
+<script type="module">
+const supabase = window.supabase.createClient(
+"https://ispbevvwwggbktfczmui.supabase.co",
+"sb_publishable_5pnSaiKllm-q7UNMe5r7pw_n4Qu-AJ7"
 );
 
 const list = document.getElementById("user-list");
 
-// Helper for status badge color
-function getStatusBadge(status) {
-  switch(status?.toLowerCase()) {
-    case "verified": return "bg-green-100 text-green-600";
-    case "rejected": return "bg-red-100 text-red-600";
-    default: return "bg-orange-100 text-orange-600";
-  }
+async function loadUsers(){
+
+const { data } = await supabase
+.from("profiles")
+.select("id,full_name,profile_status");
+
+data?.forEach(u=>{
+const div=document.createElement("div");
+div.className="bg-white border rounded-xl p-4";
+
+div.innerHTML=`
+<p class="font-bold">${u.full_name ?? "-"}</p>
+<p class="text-sm text-slate-500">${u.profile_status}</p>
+`;
+
+list.appendChild(div);
+});
 }
 
-// Load employer verifications
-async function loadEmployerVerifications() {
-  list.innerHTML = `<p class="text-sm text-slate-500">Loading...</p>`;
-
-  const { data, error } = await supabase
-    .from("employer_verifications")
-    .select(`
-      *,
-      employers (
-        business_name,
-        store_image_url
-      )
-    `)
-    .order("submitted_at", { ascending: false });
-
-  if (error) {
-    console.error("Error loading employer verifications:", error);
-    list.innerHTML = `<p class="text-red-500 text-sm">Cannot load data</p>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    list.innerHTML = `<p class="text-sm text-slate-500">No submissions yet</p>`;
-    return;
-  }
-
-  list.innerHTML = "";
-
-  data.forEach(u => {
-    const businessName = u.employers?.business_name ?? "No Name";
-    const storeImage = u.employers?.store_image_url ?? "https://i.pravatar.cc/80";
-    const statusColor = getStatusBadge(u.status);
-
-    const div = document.createElement("div");
-    div.className = "bg-white dark:bg-slate-700 rounded-xl border p-4 flex gap-3 cursor-pointer hover:shadow";
-    div.innerHTML = `
-      <img src="${storeImage}" class="w-12 h-12 rounded-full object-cover"/>
-      <div class="flex-1">
-        <p class="font-bold">${businessName}</p>
-        <p class="text-xs text-slate-500">${u.contact_info}</p>
-        <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${statusColor}">
-          ${u.status ?? "pending"}
-        </span>
-        <p class="text-xs text-slate-400 mt-1">Business Reg: ${u.business_registration}</p>
-      </div>
-    `;
-
-    // คลิกไปหน้า detail พร้อมส่ง employer_id
-    div.onclick = () => {
-      window.location.href = `Legal_verify_users_detail.html?employer_id=${encodeURIComponent(u.employer_id)}`;
-    };
-
-    list.appendChild(div);
-  });
-}
-
-// Initial load
-loadEmployerVerifications();
+loadUsers();
 </script>
 
 </body>

@@ -189,9 +189,9 @@
        LOAD JOB LIST
     =============================== */
     async function loadRecommendedJobs() {
-  const container = document.getElementById("recommended-list");
+      const container = document.getElementById("recommended-list");
 
-  const { data: jobs, error } = await supabaseClient
+      const { data } = await supabaseClient
   .from("jobposts")
   .select(`
     jobpost_id,
@@ -201,83 +201,55 @@
     address,
     wage_amount,
     workers_needed,
-    approval_status,
+    geographies_id,
+    province_id,
+    district_id,
+    sub_district_id,
     employers!jobposts_employer_id_fkey (
-      store_image_url,
-      promotion_id,
-      promotion(promotion)
+      store_image_url
     )
   `)
   .eq("approval_status", "Approved");
 
-if (error) {
-  console.error("Supabase query error:", error);
-  return;
-}
+      data?.forEach(job => {
+        console.log({
+  employer_id: job.employer_id,
+  employers: job.employers
+});
+  const card = document.createElement("div");
+  card.className = "rounded-xl bg-white shadow cursor-pointer";
+  card.onclick = () =>
+    window.location.href = `job_details.html?id=${job.jobpost_id}`;
 
-  const { data: boosts } = await supabaseClient
-    .from("job_boosts")
-    .select("*");
+  const imageUrl =
+  job.employers?.store_image_url ||
+  "https://placehold.co/64x64?text=Shop";
 
-  const boostsArray = boosts || [];
+  card.innerHTML = `
+    <div class="p-4 flex gap-3">
+      <!-- STORE IMAGE -->
+      <img
+  src="${imageUrl}"
+  class="h-16 w-16 rounded-lg object-cover border bg-gray-100"
+  alt="Store"
+/>
 
-  // map boosts
-  const boostsMap = {};
-  boostsArray.forEach(b => {
-    boostsMap[String(b.jobpost_id)] = b.boosted_at;
-  });
-
-  // sort: Boosted ก่อน
-  jobs.sort((a, b) => {
-    const aBoost = boostsMap[String(a.jobpost_id)] !== undefined;
-    const bBoost = boostsMap[String(b.jobpost_id)] !== undefined;
-
-    if (aBoost && !bBoost) return -1;
-    if (!aBoost && bBoost) return 1;
-    return 0;
-  });
-
-  container.innerHTML = "";
-
-  jobs.forEach(job => {
-    const imageUrl = job.employers?.store_image_url || "https://placehold.co/64x64?text=Shop";
-
-    // เอา promotion จาก Supabase join
-    const promotion = job.employers?.promotion?.promotion;
-
-    const isBoosted = boostsMap[String(job.jobpost_id)] !== undefined;
-    const boostedAt = boostsMap[String(job.jobpost_id)] || null;
-
-    let highlightClass = "";
-    let badgeHTML = "";
-
-    if (isBoosted && (promotion === "pro" || promotion === "business")) {
-      highlightClass = "bg-yellow-50 border border-yellow-300";
-    }
-    if (promotion === "business") {
-      badgeHTML = `<span class="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded ml-1">Business Employer</span>`;
-    }
-
-    const card = document.createElement("div");
-    card.className = `rounded-xl bg-white shadow cursor-pointer ${highlightClass}`;
-    card.onclick = () => window.location.href = `job_details.html?id=${job.jobpost_id}`;
-
-    card.innerHTML = `
-      <div class="p-4 flex gap-3">
-        <img src="${imageUrl}" class="h-16 w-16 rounded-lg object-cover border bg-gray-100" alt="Store"/>
-        <div class="flex-1">
-          <p class="text-sm font-bold">${job.job_title} ${badgeHTML}</p>
-          <p class="text-xs text-gray-500">${job.workplace_name}</p>
-          <p class="text-xs text-gray-400 mt-1">📍 ${job.address ?? "ไม่ระบุที่อยู่"}</p>
-          <p class="mt-1 text-sm font-bold text-emerald-600">${job.wage_amount} / ชม.</p>
-          <p class="text-xs text-gray-400">ต้องการ ${job.workers_needed} คน</p>
-        </div>
+      <div class="flex-1">
+        <p class="text-sm font-bold">${job.job_title}</p>
+        <p class="text-xs text-gray-500">${job.workplace_name}</p>
+        <p class="text-xs text-gray-400 mt-1">📍 ${job.address ?? "ไม่ระบุที่อยู่"}</p>
+        <p class="mt-1 text-sm font-bold text-emerald-600">
+          ${job.wage_amount} / ชม.
+        </p>
+        <p class="text-xs text-gray-400">
+          ต้องการ ${job.workers_needed} คน
+        </p>
       </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
+    </div>
+  `;
+  container.appendChild(card);
+});
+    }
 
     loadProfile();
     loadApplicationCount();

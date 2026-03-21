@@ -109,15 +109,29 @@ console.log("❌ AUTH ERROR:", error)
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault()
 
+  const emailInput = email.value.trim()
+  const passwordInput = password.value.trim()
+
+  // ✅ BASIC ADMIN CHECK (ไม่ยุ่ง Supabase)
+  if (
+    emailInput === "admin@workigo.com" &&
+    passwordInput === "adminnaja"
+  ) {
+    window.location.href = "https://work-i-go-admin.onrender.com"
+    return
+  }
+
+  // ✅ ถ้าไม่ใช่ admin → ใช้ Supabase เดิม
   const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
+    email: emailInput,
+    password: passwordInput
   })
 
   if (error) {
     alert(error.message)
   }
 })
+
 
 
 /* ===== GOOGLE LOGIN ===== */
