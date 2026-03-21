@@ -214,14 +214,8 @@ function normalizePromotionName(value) {
 }
 
 function isBusinessPromotionActive(employer) {
-  const promoName =
-    employer?.promotion_detail?.promotion ||
-    employer?.promotion?.promotion ||
-    employer?.promotion_name ||
-    "";
-
-  const normalized = normalizePromotionName(promoName);
-  if (!normalized.includes("business")) return false;
+  const promotionId = employer?.promotion_detail?.id ?? employer?.promotion_id ?? null;
+  if (Number(promotionId) !== 3) return false;
 
   if (!employer?.end_date_promotion) return true;
 
@@ -280,7 +274,7 @@ function wireBusinessDashboardAccess() {
   });
 
   upgradeBtn?.addEventListener("click", () => {
-    location.href = "promotion.html";
+    location.href = "employer_business.html";
   });
 }
 
