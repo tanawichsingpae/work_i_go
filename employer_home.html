@@ -259,12 +259,16 @@ function wireBusinessDashboardAccess() {
   const modal = document.getElementById("businessPromoModal");
   const upgradeBtn = document.getElementById("upgradeBusinessBtn");
 
-  dashboardBtn?.addEventListener("click", () => {
-    if (employerPackageState.isBusinessActive) {
-      location.href = "employer_Dashboard.html";
+  dashboardBtn?.addEventListener("click", async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      window.location.href = "signin.html";
       return;
     }
-    openBusinessPromoModal();
+
+    const token = session.access_token;
+    window.location.href = "https://workigoemployer-production.up.railway.app/employer?token=" + token;
   });
 
   closeBtn?.addEventListener("click", closeBusinessPromoModal);
