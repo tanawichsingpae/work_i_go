@@ -174,41 +174,50 @@ document.getElementById("submitVerify").addEventListener("click", async () => {
     alert("คุณได้ส่งการยืนยันตัวตนแล้ว กรุณารอการตรวจสอบ");
     return;
   }
-// Upload file
-if (!fileInput.files[0]) { 
-  alert("กรุณาเลือกไฟล์ PDF"); 
-  return; 
-}
 
-const file = fileInput.files[0];
+  const file = fileInput.files[0];
+if (!file) { alert("กรุณาเลือกไฟล์ PDF"); return; }
+
+// 1️⃣ Upload file
 const { data: uploadData, error: uploadErr } = await supabase.storage
   .from("employer-docs")
   .upload(`${employer_id}/documents.pdf`, file, { upsert: true });
 
-if (uploadErr) { 
-  console.error(uploadErr); 
-  alert("อัปโหลดไฟล์ล้มเหลว"); 
-  return; 
+if (uploadErr) {
+  console.error(uploadErr);
+  alert("อัปโหลดไฟล์ล้มเหลว");
+  return;
+}
+// 2️⃣ สร้าง signed URL สำหรับ private bucket
+const { data: signedUrlData, error: signedErr } = await supabase
+  .storage
+  .from("employer-docs")
+  .createSignedUrl(`${employer_id}/documents.pdf`, 60*60); // 1 ชั่วโมง
+
+if (signedErr) {
+  console.error(signedErr);
+  alert("ไม่สามารถสร้าง URL ของไฟล์ได้");
+  return;
 }
 
-const documents_url = supabase.storage.from("employer-docs").getPublicUrl(uploadData.path).publicUrl;
-
-const { data, error } = await supabase
+const publicUrl = signedUrlData.signedUrl;
+// 3️⃣ Insert ลง table
+const { data: verifyData, error: insertErr } = await supabase
   .from("employer_verifications")
   .insert([{
     employer_id,
     business_registration: businessReg,
     contact_info: contactInfo,
-    documents_url // ✅ ต้องไม่ null
+    documents_url: publicUrl
   }]);
 
-  if (error) { 
-    console.error(error); 
-    alert("ส่งข้อมูลล้มเหลว"); 
-  } else { 
-    alert("ส่งการยืนยันเรียบร้อย! รอ 1-3 วันทำการ"); 
-    location.href = "employer_home.html"; 
-  }
+if (insertErr) {
+  console.error(insertErr);
+  alert("ส่งข้อมูลล้มเหลว");
+} else {
+  alert("ส่งการยืนยันเรียบร้อย! รอ 1-3 วันทำการ");
+  location.href = "employer_home.html";
+}
 });
 </script>
 </body>
